@@ -57,6 +57,8 @@ size_t terminalColumn;
 uint8_t terminalColor;
 uint16_t* terminalBuffer;
 
+void UpdateCursor(size_t, size_t);
+
 void TerminalInitialize() {
 	terminalRow = 0;
 	terminalColumn = 0;
@@ -87,6 +89,7 @@ void TerminalWriteChar(char c) {
 			terminalRow = 0;
 		}
 	}
+	UpdateCursor(terminalColumn, terminalRow);
 }
 
 void TerminalWriteString(const char* data) {
@@ -96,9 +99,18 @@ void TerminalWriteString(const char* data) {
 	}	
 }
 
+void UpdateCursor(size_t x, size_t y) {
+	uint16_t pos = y * VGA_WIDTH + x;
+	OutB(0x3D4, 0x0F);
+	OutB(0x3D5, (uint8_t)(pos& 0xFF));
+	OutB(0x3D4, 0x0E);
+	OutB(0x3D5, (uint8_t)((pos >> 8)) & 0xFF);
+}
+
 void TerminalNextLine() {
 	terminalRow++;
 	terminalColumn = 0;
+	UpdateCursor(terminalColumn, terminalRow);
 }
 
 void TerminalSplash() {
