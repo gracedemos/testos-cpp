@@ -91,22 +91,28 @@ void TerminalNextLine() {
 	terminalColumn = 0;
 }
 
+void TerminalSplash() {
+	terminalColor = VGAEntryColor(VGA_COLOR_MAGENTA, VGA_COLOR_BLACK);
+	TerminalWriteString(" _____         _    ___  ____  ");
+	TerminalNextLine();
+	TerminalWriteString("|_   _|__  ___| |_ / _ \\/ ___| ");
+	TerminalNextLine();
+	TerminalWriteString("  | |/ _ \\/ __| __| | | \\___ \\ ");
+	TerminalNextLine();
+	TerminalWriteString("  | |  __/\\__ \\ |_| |_| |___) |");
+	TerminalNextLine();
+	TerminalWriteString("  |_|\\___||___/\\__|\\___/|____/");
+	terminalColor = VGAEntryColor(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+	TerminalNextLine();
+	TerminalNextLine();
+	TerminalWriteString("Version 1.0");
+	TerminalNextLine();
+	TerminalNextLine();
+}
+
 extern "C" {
 	void KernelMain() {
 		TerminalInitialize();
-		TerminalWriteString(" _____         _    ___  ____  ");
-		TerminalNextLine();
-		TerminalWriteString("|_   _|__  ___| |_ / _ \\/ ___| ");
-		TerminalNextLine();
-		TerminalWriteString("  | |/ _ \\/ __| __| | | \\___ \\ ");
-		TerminalNextLine();
-		TerminalWriteString("  | |  __/\\__ \\ |_| |_| |___) |");
-		TerminalNextLine();
-		TerminalWriteString("  |_|\\___||___/\\__|\\___/|____/");
-		TerminalNextLine();
-		TerminalNextLine();
-		TerminalWriteString("Version 1.0");
-		TerminalNextLine();
-		TerminalNextLine();
+		TerminalSplash();
 	}
 }
