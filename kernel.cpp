@@ -31,6 +31,16 @@ static inline uint16_t VGAEntry(unsigned char uc, uint8_t color)
 	return (uint16_t) uc | (uint16_t) color << 8;
 }
 
+static inline void OutB(uint16_t port, uint8_t val) {
+	asm volatile ( "outb %0, %1" : : "a"(val), "Nd"(port) );
+}
+
+static inline uint8_t InB(uint16_t port) {
+	uint8_t ret;
+	asm volatile ( "inb %1, %0" : "=a"(ret) : "Nd"(port) );
+	return ret;
+}
+
 size_t StrLen(const char* str) {
 	size_t len = 0;
 	while(str[len]) {
@@ -110,9 +120,15 @@ void TerminalSplash() {
 	TerminalNextLine();
 }
 
+void DisableCursor() {
+	OutB(0x3D4, 0x0A);
+	OutB(0x3D5, 0x20);
+}
+
 extern "C" {
 	void KernelMain() {
 		TerminalInitialize();
+		DisableCursor();
 		TerminalSplash();
 	}
 }
