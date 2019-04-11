@@ -19,17 +19,10 @@ stack_bottom:
 stack_top:
 
 section .text
-global _start:function (_start.end - _start)
+global _start
 
 _start:
 	mov esp, stack_top
 
 	extern KernelMain
 	call KernelMain
-
-	cli
-
-.hang:	hlt
-	jmp .hang
-
-.end:

@@ -137,10 +137,24 @@ void DisableCursor() {
 	OutB(0x3D5, 0x20);
 }
 
+void InterruptHandler() {
+	unsigned char status;
+	unsigned char scancode;
+	status = InB(0x64);
+	scancode = InB(0x60);
+}
+
+void Hang() {
+	while(1) {
+
+	}
+}
+
 extern "C" {
 	void KernelMain() {
 		TerminalInitialize();
 		DisableCursor();
 		TerminalSplash();
+		Hang();
 	}
 }
