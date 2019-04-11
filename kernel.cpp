@@ -21,6 +21,11 @@ enum VGAColor {
 	VGA_COLOR_WHITE = 15,
 };
 
+enum Interrupts {
+	OPTION_SELECT = 0,
+	PRINT = 1,
+};
+
 static inline uint8_t VGAEntryColor(enum VGAColor fg, enum VGAColor bg) 
 {
 	return fg | bg << 4;
@@ -56,8 +61,14 @@ size_t terminalRow;
 size_t terminalColumn;
 uint8_t terminalColor;
 uint16_t* terminalBuffer;
+unsigned char status;
+unsigned char scancode;
+size_t selected;
+size_t selRow;
 
 void UpdateCursor(size_t, size_t);
+void WriteOptionSelect(const char*, size_t);
+void WriteOptionLine(const char*, size_t, size_t);
 
 void TerminalInitialize() {
 	terminalRow = 0;
@@ -99,6 +110,15 @@ void TerminalWriteString(const char* data) {
 	}	
 }
 
+void TerminalWriteStringInv(const char* data) {
+	size_t size = StrLen(data);
+	terminalColor = VGAEntryColor(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_GREY);
+	for(size_t i = 0; i < size; i++) {
+		TerminalWriteChar(data[i]);
+	}
+	terminalColor = VGAEntryColor(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+}
+
 void UpdateCursor(size_t x, size_t y) {
 	uint16_t pos = y * VGA_WIDTH + x;
 	OutB(0x3D4, 0x0F);
@@ -137,11 +157,34 @@ void DisableCursor() {
 	OutB(0x3D5, 0x20);
 }
 
-void InterruptHandler() {
-	unsigned char status;
-	unsigned char scancode;
+void InterruptHandler(enum Interrupts intr) {
 	status = InB(0x64);
 	scancode = InB(0x60);
+
+	switch(intr) {
+		case 0:
+			if(scancode == 0x1F) {
+				selected++;
+				terminalRow = selRow;
+				terminalColumn = 0;
+				WriteOptionLine("Option 1", 0, 0);
+				TerminalNextLine();
+				WriteOptionLine("Option 2", 1, 1);
+			}
+			else if(scancode == 0x11) {
+				selected = selected - 1;
+				terminalRow = selRow;
+				terminalColumn = 0;
+				WriteOptionLine("Option 1", 1, 0);
+				TerminalNextLine();
+				WriteOptionLine("Option 2", 0, 1);
+			}
+		break;
+		case 1:
+			if(scancode == 0x12) {
+				TerminalWriteString("Yuh");
+			}
+	}
 }
 
 void Hang() {
@@ -150,11 +193,39 @@ void Hang() {
 	}
 }
 
+void WaitForInterrupt() {
+	size_t wait = 1;
+	while(wait) {
+		InterruptHandler(OPTION_SELECT);
+		wait = 0;
+	}
+}
+
+void WriteOptionLine(const char* data, size_t seld, size_t num) {
+	if(seld) {
+		TerminalWriteStringInv(data);
+		selected = num;
+	}
+	else {
+		TerminalWriteString(data);
+	}
+}
+
 extern "C" {
 	void KernelMain() {
 		TerminalInitialize();
 		DisableCursor();
 		TerminalSplash();
+
+		selRow = terminalRow;
+		WriteOptionLine("Option 1", 1, 0);
+		TerminalNextLine();
+		WriteOptionLine("Option 2", 0, 1);
+
+		while(1) {
+			WaitForInterrupt();
+		}
+
 		Hang();
 	}
 }
