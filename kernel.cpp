@@ -21,11 +21,6 @@ enum VGAColor {
 	VGA_COLOR_WHITE = 15,
 };
 
-enum Interrupts {
-	OPTION_SELECT = 0,
-	PRINT = 1,
-};
-
 static inline uint8_t VGAEntryColor(enum VGAColor fg, enum VGAColor bg) 
 {
 	return fg | bg << 4;
@@ -65,6 +60,7 @@ unsigned char status;
 unsigned char scancode;
 size_t selected;
 size_t selRow;
+size_t oRow;
 
 void UpdateCursor(size_t, size_t);
 void WriteOptionSelect(const char*, size_t);
@@ -157,33 +153,47 @@ void DisableCursor() {
 	OutB(0x3D5, 0x20);
 }
 
-void InterruptHandler(enum Interrupts intr) {
+void InterruptHandler() {
 	status = InB(0x64);
 	scancode = InB(0x60);
 
-	switch(intr) {
-		case 0:
-			if(scancode == 0x1F) {
-				selected++;
-				terminalRow = selRow;
-				terminalColumn = 0;
-				WriteOptionLine("Option 1", 0, 0);
-				TerminalNextLine();
-				WriteOptionLine("Option 2", 1, 1);
-			}
-			else if(scancode == 0x11) {
-				selected = selected - 1;
-				terminalRow = selRow;
-				terminalColumn = 0;
-				WriteOptionLine("Option 1", 1, 0);
-				TerminalNextLine();
-				WriteOptionLine("Option 2", 0, 1);
-			}
-		break;
-		case 1:
-			if(scancode == 0x12) {
-				TerminalWriteString("Yuh");
-			}
+	switch(scancode) {
+		case 0x1F: //S
+			selected++;
+			terminalRow = selRow;
+			terminalColumn = 0;
+			WriteOptionLine("Option 1", 0, 0);
+			TerminalNextLine();
+			WriteOptionLine("Option 2", 1, 1);
+			TerminalNextLine();
+			break;
+		case 0x11:
+			selected = selected - 1;
+			terminalRow = selRow;
+			terminalColumn = 0;
+			WriteOptionLine("Option 1", 1, 0);
+			TerminalNextLine();
+			WriteOptionLine("Option 2", 0, 1);
+			TerminalNextLine();
+			break;
+		case 0x1C:
+			switch(selected) {
+				case 0:
+					terminalRow = oRow;
+					terminalColumn = 0;
+					terminalColor = VGAEntryColor(VGA_COLOR_CYAN, VGA_COLOR_BLACK);
+					TerminalWriteString("1");
+					terminalColor = VGAEntryColor(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+					break;
+				case 1:
+					terminalRow = oRow;
+					terminalColumn = 0;
+					terminalColor = VGAEntryColor(VGA_COLOR_CYAN, VGA_COLOR_BLACK);
+					TerminalWriteString("2");
+					terminalColor = VGAEntryColor(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+					break;
+				}
+			break;
 	}
 }
 
@@ -196,7 +206,7 @@ void Hang() {
 void WaitForInterrupt() {
 	size_t wait = 1;
 	while(wait) {
-		InterruptHandler(OPTION_SELECT);
+		InterruptHandler();
 		wait = 0;
 	}
 }
@@ -221,7 +231,10 @@ extern "C" {
 		WriteOptionLine("Option 1", 1, 0);
 		TerminalNextLine();
 		WriteOptionLine("Option 2", 0, 1);
+		TerminalNextLine();
+		TerminalNextLine();
 
+		oRow = terminalRow;
 		while(1) {
 			WaitForInterrupt();
 		}
