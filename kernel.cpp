@@ -223,7 +223,13 @@ void Hang() {
 }
 
 void WaitForInterruptMain() {
-	InterruptHandlerMain();
+	scanUp = scancode;
+	if(InB(0x60) == scanUp) {
+
+	}
+	else {
+		InterruptHandlerMain();
+	}
 }
 
 void WriteOptionLine(const char* data, size_t seld, size_t num) {
@@ -278,6 +284,9 @@ void TerminalInterruptHandler() {
 				TerminalWriteString("Correct");
 				TerminalNextLine();
 			}
+			if(termLine[0] == 'e' && termLine[1] == 'x' && termLine[2] == 'i' && termLine[3] == 't') {
+				termB = 0;
+			}
 			TerminalEcho();
 			break;
 		case 0x02: //1
@@ -320,6 +329,21 @@ void TerminalInterruptHandler() {
 			termLine[terminalColumn - 2] = '0';
 			TerminalWriteString("0");
 			break;
+		case 0x12: //E
+			termLine[terminalColumn - 2] = 'e';
+			TerminalWriteString("e");
+			break;
+		case 0x2D: //X
+			termLine[terminalColumn - 2] = 'x';
+			TerminalWriteString("x");
+			break;
+		case 0x17: //I
+			termLine[terminalColumn - 2] = 'i';
+			TerminalWriteString("i");
+			break;
+		case 0x14: //T
+			termLine[terminalColumn - 2] = 't';
+			TerminalWriteString("t");
 	}
 }
 
@@ -341,6 +365,9 @@ void TerminalMain() {
 	while(termB) {
 		WaitForInterruptTerminal();
 	}
+
+	TerminalInitialize();
+	DisableCursor();
 }
 
 extern "C" {
