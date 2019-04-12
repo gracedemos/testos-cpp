@@ -344,6 +344,95 @@ void TerminalInterruptHandler() {
 		case 0x14: //T
 			termLine[terminalColumn - 2] = 't';
 			TerminalWriteString("t");
+			break;
+		case 0x1E: //A
+			termLine[terminalColumn - 2] = 'a';
+			TerminalWriteString("a");
+			break;
+		case 0x30: //B
+			termLine[terminalColumn - 2] = 'b';
+			TerminalWriteString("b");
+			break;
+		case 0x2E: //C
+			termLine[terminalColumn - 2] = 'c';
+			TerminalWriteString("c");
+			break;
+		case 0x20: //D
+			termLine[terminalColumn - 2] = 'd';
+			TerminalWriteString("d");
+			break;
+		case 0x21: //F
+			termLine[terminalColumn - 2] = 'f';
+			TerminalWriteString("f");
+			break;
+		case 0x22: //G
+			termLine[terminalColumn - 2] = 'g';
+			TerminalWriteString("g");
+			break;
+		case 0x23: //H
+			termLine[terminalColumn - 2] = 'h';
+			TerminalWriteString("h");
+			break;
+		case 0x24: //J
+			termLine[terminalColumn - 2] = 'j';
+			TerminalWriteString("j");
+			break;
+		case 0x25: //K
+			termLine[terminalColumn - 2] = 'k';
+			TerminalWriteString("k");
+			break;
+		case 0x26: //L
+			termLine[terminalColumn - 2] = 'l';
+			TerminalWriteString("l");
+			break;
+		case 0x32: //M
+			termLine[terminalColumn - 2] = 'm';
+			TerminalWriteString("m");
+			break;
+		case 0x31: //N
+			termLine[terminalColumn - 2] = 'n';
+			TerminalWriteString("n");
+			break;
+		case 0x18: //O
+			termLine[terminalColumn - 2] = 'o';
+			TerminalWriteString("o");
+			break;
+		case 0x19: //P
+			termLine[terminalColumn - 2] = 'p';
+			TerminalWriteString("p");
+			break;
+		case 0x10: //Q
+			termLine[terminalColumn - 2] = 'q';
+			TerminalWriteString("q");
+			break;
+		case 0x13: //R
+			termLine[terminalColumn - 2] = 'r';
+			TerminalWriteString("r");
+			break;
+		case 0x1F: //S
+			termLine[terminalColumn - 2] = 's';
+			TerminalWriteString("s");
+			break;
+		case 0x16: //U
+			termLine[terminalColumn - 2] = 'u';
+			TerminalWriteString("u");
+			break;
+		case 0x2F: //V
+			termLine[terminalColumn - 2] = 'v';
+			TerminalWriteString("v");
+			break;
+		case 0x11: //W
+			termLine[terminalColumn - 2] = 'w';
+			TerminalWriteString("w");
+			break;
+		case 0x15: //Y
+			termLine[terminalColumn - 2] = 'y';
+			TerminalWriteString("y");
+			break;
+		case 0x2C: //Z
+			termLine[terminalColumn - 2] = 'z';
+			TerminalWriteString("z");
+			break;
 	}
 }
 
