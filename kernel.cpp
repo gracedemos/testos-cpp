@@ -58,9 +58,18 @@ uint8_t terminalColor;
 uint16_t* terminalBuffer;
 unsigned char status;
 unsigned char scancode;
+unsigned char scanUp;
 size_t selected;
 size_t selRow;
 size_t oRow;
+size_t dValue = 0;
+size_t mainB = 1;
+size_t termB = 1;
+size_t echoColumn = 2;
+char termLine[VGA_WIDTH];
+
+const char* op1 = "Change Value";
+const char* op2 = "Terminal";
 
 void UpdateCursor(size_t, size_t);
 void WriteOptionSelect(const char*, size_t);
@@ -96,7 +105,7 @@ void TerminalWriteChar(char c) {
 			terminalRow = 0;
 		}
 	}
-	UpdateCursor(terminalColumn, terminalRow);
+	UpdateCursor(terminalColumn, terminalRow + 1);
 }
 
 void TerminalWriteString(const char* data) {
@@ -126,7 +135,7 @@ void UpdateCursor(size_t x, size_t y) {
 void TerminalNextLine() {
 	terminalRow++;
 	terminalColumn = 0;
-	UpdateCursor(terminalColumn, terminalRow);
+	UpdateCursor(terminalColumn, terminalRow + 1);
 }
 
 void TerminalSplash() {
@@ -153,7 +162,14 @@ void DisableCursor() {
 	OutB(0x3D5, 0x20);
 }
 
-void InterruptHandler() {
+void EnableCursor() {
+	OutB(0x3D4, 0x0A);
+	OutB(0x3D5, (InB(0x3D5) & 0xC0) | (terminalRow + 1));
+	OutB(0x3D4, 0x0B);
+	OutB(0x3D5, (InB(0x3D5) & 0xE0) | (terminalRow + 1));
+}
+
+void InterruptHandlerMain() {
 	status = InB(0x64);
 	scancode = InB(0x60);
 
@@ -162,35 +178,38 @@ void InterruptHandler() {
 			selected++;
 			terminalRow = selRow;
 			terminalColumn = 0;
-			WriteOptionLine("Option 1", 0, 0);
+			WriteOptionLine(op1, 0, 0);
 			TerminalNextLine();
-			WriteOptionLine("Option 2", 1, 1);
+			WriteOptionLine(op2, 1, 1);
 			TerminalNextLine();
 			break;
-		case 0x11:
+		case 0x11: //W
 			selected = selected - 1;
 			terminalRow = selRow;
 			terminalColumn = 0;
-			WriteOptionLine("Option 1", 1, 0);
+			WriteOptionLine(op1, 1, 0);
 			TerminalNextLine();
-			WriteOptionLine("Option 2", 0, 1);
+			WriteOptionLine(op2, 0, 1);
 			TerminalNextLine();
 			break;
-		case 0x1C:
+		case 0x1C: //Enter
 			switch(selected) {
 				case 0:
 					terminalRow = oRow;
 					terminalColumn = 0;
 					terminalColor = VGAEntryColor(VGA_COLOR_CYAN, VGA_COLOR_BLACK);
-					TerminalWriteString("1");
+					if(dValue) {
+						TerminalWriteString("0");
+						dValue = 0;
+					}
+					else {
+						TerminalWriteString("1");
+						dValue = 1;
+					}
 					terminalColor = VGAEntryColor(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
 					break;
 				case 1:
-					terminalRow = oRow;
-					terminalColumn = 0;
-					terminalColor = VGAEntryColor(VGA_COLOR_CYAN, VGA_COLOR_BLACK);
-					TerminalWriteString("2");
-					terminalColor = VGAEntryColor(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+					mainB = 0;
 					break;
 				}
 			break;
@@ -203,12 +222,8 @@ void Hang() {
 	}
 }
 
-void WaitForInterrupt() {
-	size_t wait = 1;
-	while(wait) {
-		InterruptHandler();
-		wait = 0;
-	}
+void WaitForInterruptMain() {
+	InterruptHandlerMain();
 }
 
 void WriteOptionLine(const char* data, size_t seld, size_t num) {
@@ -221,6 +236,113 @@ void WriteOptionLine(const char* data, size_t seld, size_t num) {
 	}
 }
 
+void TerminalEcho() {
+	terminalColor = VGAEntryColor(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK);
+	TerminalWriteString("$ ");
+	terminalColor = VGAEntryColor(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+}
+
+size_t GetCursorPosition() {
+	size_t pos = 0;
+	OutB(0x3D4, 0x0F);
+	pos |= InB(0x3D5);
+	OutB(0x3D4, 0x0E);
+	pos |= ((size_t)InB(0x3D5)) << 8;
+	return pos;
+}
+
+void TerminalInterruptHandler() {
+	status = InB(0x64);
+	scancode = InB(0x60);
+
+	switch(scancode) {
+		case 0x8E: //Backspace
+			if(terminalColumn == echoColumn) {
+
+			}
+			else {
+				terminalColumn -= 1;
+				TerminalWriteString(" ");
+				terminalColumn -= 1;
+				UpdateCursor(terminalColumn, terminalRow + 1);
+				termLine[terminalColumn - 1] = ' ';
+			}
+			break;
+		case 0x39: //Space
+			termLine[terminalColumn - 2] = ' ';
+			TerminalWriteString(" ");
+			break;
+		case 0x1C: //Enter
+			TerminalNextLine();
+			if(termLine[0] == '1' && termLine[1] == '3' && termLine[2] == '5' && termLine[3] == '8') {
+				TerminalWriteString("Correct");
+				TerminalNextLine();
+			}
+			TerminalEcho();
+			break;
+		case 0x02: //1
+			termLine[terminalColumn - 2] = '1';
+			TerminalWriteString("1");
+			break;
+		case 0x03: //2
+			termLine[terminalColumn - 2] = '2';
+			TerminalWriteString("2");
+			break;
+		case 0x04: //3
+			termLine[terminalColumn - 2] = '3';
+			TerminalWriteString("3");
+			break;
+		case 0x05: //4
+			termLine[terminalColumn - 2] = '4';
+			TerminalWriteString("4");
+			break;
+		case 0x06: //5
+			termLine[terminalColumn - 2] = '5';
+			TerminalWriteString("5");
+			break;
+		case 0x07: //6
+			termLine[terminalColumn - 2] = '6';
+			TerminalWriteString("6");
+			break;
+		case 0x08: //7
+			termLine[terminalColumn - 2] = '7';
+			TerminalWriteString("7");
+			break;
+		case 0x09: //8
+			termLine[terminalColumn - 2] = '8';
+			TerminalWriteString("8");
+			break;
+		case 0x0A: //9
+			termLine[terminalColumn - 2] = '9';
+			TerminalWriteString("9");
+			break;
+		case 0x0B: //0
+			termLine[terminalColumn - 2] = '0';
+			TerminalWriteString("0");
+			break;
+	}
+}
+
+void WaitForInterruptTerminal() {
+	scanUp = scancode;
+	if(InB(0x60) == scanUp) {
+
+	}
+	else {
+		TerminalInterruptHandler();
+	}
+}
+
+void TerminalMain() {
+	TerminalInitialize();
+	EnableCursor();
+	TerminalEcho();
+
+	while(termB) {
+		WaitForInterruptTerminal();
+	}
+}
+
 extern "C" {
 	void KernelMain() {
 		TerminalInitialize();
@@ -228,16 +350,18 @@ extern "C" {
 		TerminalSplash();
 
 		selRow = terminalRow;
-		WriteOptionLine("Option 1", 1, 0);
+		WriteOptionLine(op1, 1, 0);
 		TerminalNextLine();
-		WriteOptionLine("Option 2", 0, 1);
+		WriteOptionLine(op2, 0, 1);
 		TerminalNextLine();
 		TerminalNextLine();
 
 		oRow = terminalRow;
-		while(1) {
-			WaitForInterrupt();
+		while(mainB) {
+			WaitForInterruptMain();
 		}
+
+		TerminalMain();
 
 		Hang();
 	}
