@@ -61,7 +61,6 @@ unsigned char scancode;
 unsigned char scanUp;
 size_t selected;
 size_t selRow;
-size_t oRow;
 size_t dValue = 0;
 size_t mainB = 1;
 size_t termB = 1;
@@ -69,13 +68,14 @@ size_t echoColumn = 2;
 size_t shiftDown = 0;
 char termLine[VGA_WIDTH];
 
-const char* op1 = "Change Value";
-const char* op2 = "Terminal";
+const char* op1 = "Terminal";
+const char* op2 = "Exit";
 
 void UpdateCursor(size_t, size_t);
 void WriteOptionSelect(const char*, size_t);
 void WriteOptionLine(const char*, size_t, size_t);
 void MainSelection();
+void Hang();
 
 void TerminalInitialize() {
 	terminalRow = 0;
@@ -176,7 +176,7 @@ void InterruptHandlerMain() {
 	scancode = InB(0x60);
 
 	switch(scancode) {
-		case 0x1F: //S
+		case 0x50: //Down Arrow
 			selected++;
 			terminalRow = selRow;
 			terminalColumn = 0;
@@ -185,7 +185,7 @@ void InterruptHandlerMain() {
 			WriteOptionLine(op2, 1, 1);
 			TerminalNextLine();
 			break;
-		case 0x11: //W
+		case 0x48: //Up Arrow
 			selected = selected - 1;
 			terminalRow = selRow;
 			terminalColumn = 0;
@@ -197,21 +197,12 @@ void InterruptHandlerMain() {
 		case 0x1C: //Enter
 			switch(selected) {
 				case 0:
-					terminalRow = oRow;
-					terminalColumn = 0;
-					terminalColor = VGAEntryColor(VGA_COLOR_CYAN, VGA_COLOR_BLACK);
-					if(dValue) {
-						TerminalWriteString("0");
-						dValue = 0;
-					}
-					else {
-						TerminalWriteString("1");
-						dValue = 1;
-					}
-					terminalColor = VGAEntryColor(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+					mainB = 0;
 					break;
 				case 1:
-					mainB = 0;
+					TerminalInitialize();
+					DisableCursor();
+					Hang();
 					break;
 				}
 			break;
@@ -245,6 +236,10 @@ void WriteOptionLine(const char* data, size_t seld, size_t num) {
 }
 
 void TerminalEcho() {
+	if(terminalRow == VGA_HEIGHT) {
+		TerminalInitialize();
+		EnableCursor();
+	}
 	terminalColor = VGAEntryColor(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK);
 	TerminalWriteString("$ ");
 	terminalColor = VGAEntryColor(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
@@ -299,6 +294,17 @@ void TerminalInterruptHandler() {
 			}
 			if(termLine[0] == 's' && termLine[1] == 'p' && termLine[2] == 'l' && termLine[3] == 'a' && termLine[4] == 's' && termLine[5] == 'h') {
 				TerminalSplash();
+			}
+			if(termLine[0] == 'h' && termLine[1] == 'e' && termLine[2] == 'l' && termLine[3] == 'p') {
+				TerminalWriteString("print: prints a string");
+				TerminalNextLine();
+				TerminalWriteString("exit: exit terminal");
+				TerminalNextLine();
+				TerminalWriteString("splash: prints TestOS splash");
+				TerminalNextLine();
+			}
+			for(size_t i = 0; i < VGA_WIDTH; i++) {
+				termLine[i] = ' ';
 			}
 			TerminalEcho();
 			break;
@@ -649,6 +655,15 @@ void MainSelection() {
 	TerminalNextLine();
 }
 
+void StartWait() {
+	size_t sc = InB(0x60);
+	if(sc == 0x1C) {
+		while(InB(0x60) != 0x9C) {
+
+		}
+	}
+}
+
 extern "C" {
 	void KernelMain() {
 		while(1) {
@@ -657,8 +672,8 @@ extern "C" {
 			TerminalSplash();
 
 			MainSelection();
+			StartWait();
 
-			oRow = terminalRow;
 			while(mainB) {
 				WaitForInterruptMain();
 			}
