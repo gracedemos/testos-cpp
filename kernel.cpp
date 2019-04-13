@@ -66,6 +66,7 @@ size_t dValue = 0;
 size_t mainB = 1;
 size_t termB = 1;
 size_t echoColumn = 2;
+size_t shiftDown = 0;
 char termLine[VGA_WIDTH];
 
 const char* op1 = "Change Value";
@@ -74,6 +75,7 @@ const char* op2 = "Terminal";
 void UpdateCursor(size_t, size_t);
 void WriteOptionSelect(const char*, size_t);
 void WriteOptionLine(const char*, size_t, size_t);
+void MainSelection();
 
 void TerminalInitialize() {
 	terminalRow = 0;
@@ -287,7 +289,30 @@ void TerminalInterruptHandler() {
 			if(termLine[0] == 'e' && termLine[1] == 'x' && termLine[2] == 'i' && termLine[3] == 't') {
 				termB = 0;
 			}
+			if(termLine[0] == 'p' && termLine[1] == 'r' && termLine[2] == 'i' && termLine[3] == 'n' && termLine[4] == 't') {
+				for(size_t i = 0; i < 75; i++) {
+					if(i > 5) {
+						TerminalWriteChar(termLine[i]);
+					}
+				}
+				TerminalNextLine();
+			}
+			if(termLine[0] == 's' && termLine[1] == 'p' && termLine[2] == 'l' && termLine[3] == 'a' && termLine[4] == 's' && termLine[5] == 'h') {
+				TerminalSplash();
+			}
 			TerminalEcho();
+			break;
+		case 0x2A: //Left Shift
+			shiftDown = 1;
+			break;
+		case 0x36: //Right Shift
+			shiftDown = 1;
+			break;
+		case 0xAA: //Left Shift Up
+			shiftDown = 0;
+			break;
+		case 0xB6: //Right Shift Up
+			shiftDown = 0;
 			break;
 		case 0x02: //1
 			termLine[terminalColumn - 2] = '1';
@@ -330,108 +355,264 @@ void TerminalInterruptHandler() {
 			TerminalWriteString("0");
 			break;
 		case 0x12: //E
-			termLine[terminalColumn - 2] = 'e';
-			TerminalWriteString("e");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'E';
+				TerminalWriteString("E");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'e';
+				TerminalWriteString("e");
+			}
 			break;
 		case 0x2D: //X
-			termLine[terminalColumn - 2] = 'x';
-			TerminalWriteString("x");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'X';
+				TerminalWriteString("X");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'x';
+				TerminalWriteString("x");
+			}
 			break;
 		case 0x17: //I
-			termLine[terminalColumn - 2] = 'i';
-			TerminalWriteString("i");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'I';
+				TerminalWriteString("I");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'i';
+				TerminalWriteString("i");
+			}
 			break;
 		case 0x14: //T
-			termLine[terminalColumn - 2] = 't';
-			TerminalWriteString("t");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'T';
+				TerminalWriteString("T");
+			}
+			else {
+				termLine[terminalColumn - 2] = 't';
+				TerminalWriteString("t");
+			}
 			break;
 		case 0x1E: //A
-			termLine[terminalColumn - 2] = 'a';
-			TerminalWriteString("a");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'A';
+				TerminalWriteString("A");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'a';
+				TerminalWriteString("a");
+			}
 			break;
 		case 0x30: //B
-			termLine[terminalColumn - 2] = 'b';
-			TerminalWriteString("b");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'B';
+				TerminalWriteString("B");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'b';
+				TerminalWriteString("b");
+			}
 			break;
 		case 0x2E: //C
-			termLine[terminalColumn - 2] = 'c';
-			TerminalWriteString("c");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'C';
+				TerminalWriteString("C");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'c';
+				TerminalWriteString("c");
+			}
 			break;
 		case 0x20: //D
-			termLine[terminalColumn - 2] = 'd';
-			TerminalWriteString("d");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'D';
+				TerminalWriteString("D");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'd';
+				TerminalWriteString("d");
+			}
 			break;
 		case 0x21: //F
-			termLine[terminalColumn - 2] = 'f';
-			TerminalWriteString("f");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'F';
+				TerminalWriteString("F");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'f';
+				TerminalWriteString("f");
+			}
 			break;
 		case 0x22: //G
-			termLine[terminalColumn - 2] = 'g';
-			TerminalWriteString("g");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'G';
+				TerminalWriteString("G");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'g';
+				TerminalWriteString("g");
+			}
 			break;
 		case 0x23: //H
-			termLine[terminalColumn - 2] = 'h';
-			TerminalWriteString("h");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'H';
+				TerminalWriteString("H");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'h';
+				TerminalWriteString("h");
+			}
 			break;
 		case 0x24: //J
-			termLine[terminalColumn - 2] = 'j';
-			TerminalWriteString("j");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'J';
+				TerminalWriteString("J");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'j';
+				TerminalWriteString("j");
+			}
 			break;
 		case 0x25: //K
-			termLine[terminalColumn - 2] = 'k';
-			TerminalWriteString("k");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'K';
+				TerminalWriteString("K");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'k';
+				TerminalWriteString("k");
+			}
 			break;
 		case 0x26: //L
-			termLine[terminalColumn - 2] = 'l';
-			TerminalWriteString("l");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'L';
+				TerminalWriteString("L");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'l';
+				TerminalWriteString("l");
+			}
 			break;
 		case 0x32: //M
-			termLine[terminalColumn - 2] = 'm';
-			TerminalWriteString("m");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'M';
+				TerminalWriteString("M");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'm';
+				TerminalWriteString("m");
+			}
 			break;
 		case 0x31: //N
-			termLine[terminalColumn - 2] = 'n';
-			TerminalWriteString("n");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'N';
+				TerminalWriteString("N");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'n';
+				TerminalWriteString("n");
+			}
 			break;
 		case 0x18: //O
-			termLine[terminalColumn - 2] = 'o';
-			TerminalWriteString("o");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'O';
+				TerminalWriteString("O");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'o';
+				TerminalWriteString("o");
+			}
 			break;
 		case 0x19: //P
-			termLine[terminalColumn - 2] = 'p';
-			TerminalWriteString("p");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'P';
+				TerminalWriteString("P");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'p';
+				TerminalWriteString("p");
+			}
 			break;
 		case 0x10: //Q
-			termLine[terminalColumn - 2] = 'q';
-			TerminalWriteString("q");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'Q';
+				TerminalWriteString("Q");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'q';
+				TerminalWriteString("q");
+			}
 			break;
 		case 0x13: //R
-			termLine[terminalColumn - 2] = 'r';
-			TerminalWriteString("r");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'R';
+				TerminalWriteString("R");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'r';
+				TerminalWriteString("r");
+			}
 			break;
 		case 0x1F: //S
-			termLine[terminalColumn - 2] = 's';
-			TerminalWriteString("s");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'S';
+				TerminalWriteString("S");
+			}
+			else {
+				termLine[terminalColumn - 2] = 's';
+				TerminalWriteString("s");
+			}
 			break;
 		case 0x16: //U
-			termLine[terminalColumn - 2] = 'u';
-			TerminalWriteString("u");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'U';
+				TerminalWriteString("U");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'u';
+				TerminalWriteString("u");
+			}
 			break;
 		case 0x2F: //V
-			termLine[terminalColumn - 2] = 'v';
-			TerminalWriteString("v");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'V';
+				TerminalWriteString("V");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'v';
+				TerminalWriteString("v");
+			}
 			break;
 		case 0x11: //W
-			termLine[terminalColumn - 2] = 'w';
-			TerminalWriteString("w");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'W';
+				TerminalWriteString("W");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'w';
+				TerminalWriteString("w");
+			}
 			break;
 		case 0x15: //Y
-			termLine[terminalColumn - 2] = 'y';
-			TerminalWriteString("y");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'Y';
+				TerminalWriteString("Y");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'y';
+				TerminalWriteString("y");
+			}
 			break;
 		case 0x2C: //Z
-			termLine[terminalColumn - 2] = 'z';
-			TerminalWriteString("z");
+			if(shiftDown) {
+				termLine[terminalColumn - 2] = 'Z';
+				TerminalWriteString("Z");
+			}
+			else {
+				termLine[terminalColumn - 2] = 'z';
+				TerminalWriteString("z");
+			}
 			break;
 	}
 }
@@ -455,29 +636,35 @@ void TerminalMain() {
 		WaitForInterruptTerminal();
 	}
 
-	TerminalInitialize();
-	DisableCursor();
+	termB = 1;
+	mainB = 1;
+}
+
+void MainSelection() {
+	selRow = terminalRow;
+	WriteOptionLine(op1, 1, 0);
+	TerminalNextLine();
+	WriteOptionLine(op2, 0, 1);
+	TerminalNextLine();
+	TerminalNextLine();
 }
 
 extern "C" {
 	void KernelMain() {
-		TerminalInitialize();
-		DisableCursor();
-		TerminalSplash();
+		while(1) {
+			TerminalInitialize();
+			DisableCursor();
+			TerminalSplash();
 
-		selRow = terminalRow;
-		WriteOptionLine(op1, 1, 0);
-		TerminalNextLine();
-		WriteOptionLine(op2, 0, 1);
-		TerminalNextLine();
-		TerminalNextLine();
+			MainSelection();
 
-		oRow = terminalRow;
-		while(mainB) {
-			WaitForInterruptMain();
+			oRow = terminalRow;
+			while(mainB) {
+				WaitForInterruptMain();
+			}
+
+			TerminalMain();
 		}
-
-		TerminalMain();
 
 		Hang();
 	}
